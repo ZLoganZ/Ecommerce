@@ -40,27 +40,28 @@ class AccessService {
 
       if (newShop) {
         // create private key, public key
-        const { privateKey, publicKey } = crypto.generateKeyPairSync("rsa", {
-          modulusLength: 4096,
-          publicKeyEncoding: {
-            type: "pkcs1",
-            format: "pem",
-          },
-          privateKeyEncoding: {
-            type: "pkcs1",
-            format: "pem",
-          },
-        });
+        // const { privateKey, publicKey } = crypto.generateKeyPairSync("rsa", {
+        //   modulusLength: 4096,
+        //   publicKeyEncoding: {
+        //     type: "pkcs1",
+        //     format: "pem",
+        //   },
+        //   privateKeyEncoding: {
+        //     type: "pkcs1",
+        //     format: "pem",
+        //   },
+        // });
 
-        console.log(privateKey);
-        console.log(publicKey);
+        const privateKey = crypto.randomBytes(64).toString("hex");
+        const publicKey = crypto.randomBytes(64).toString("hex");
 
-        const publicKeyString = await keyTokenService.createKeyToken({
+        const keyStores = await keyTokenService.createKeyToken({
           userId: newShop._id,
           publicKey,
+          privateKey,
         });
 
-        if (!publicKeyString) {
+        if (!keyStores) {
           return {
             code: 400,
             metadata: {
@@ -69,11 +70,11 @@ class AccessService {
           };
         }
 
-        const publicKeyObject = crypto.createPublicKey(publicKeyString);
+        // const publicKeyObject = crypto.createPublicKey(publicKeyString);
 
         const tokens = await createTokenPair(
           { userId: newShop._id, email },
-          publicKeyObject,
+          publicKey,
           privateKey
         );
 
@@ -95,7 +96,9 @@ class AccessService {
           message: "Create shop failed",
         },
       };
-    } catch (error) {}
+    } catch (error) {
+      console.log(error);
+    }
   };
 }
 
