@@ -1,19 +1,17 @@
 "use strict";
 
+const AccessService = require("../services/access.service");
+
 class AccessController {
-  register = async (req, res, next) => {
+  static register = async (req, res, next) => {
     try {
-      console.log(`[P]::register::`, req.body);
-      res.status(201).json({
-        code: 201,
-        metadata: {
-          message: "Register successfully",
-        },
-      });
+      console.log(`register::`, req.body);
+
+      res.status(201).json(await AccessService.register(req.body));
     } catch (error) {
       next(error);
     }
   };
 }
 
-module.exports = new AccessController();
+module.exports = AccessController;

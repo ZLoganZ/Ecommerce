@@ -1,6 +1,6 @@
 "use strict";
 
-const { model, Schema, Types } = require("mongoose");
+const { model, Schema } = require("mongoose");
 
 const DOCUMENT_NAME = "Shop";
 const COLLECTION_NAME = "Shops";
@@ -15,6 +15,7 @@ const shopSchema = new Schema(
     email: {
       type: String,
       trim: true,
+      required: true,
       unique: true,
     },
     password: {
@@ -31,7 +32,7 @@ const shopSchema = new Schema(
       default: false,
     },
     roles: {
-      type: String,
+      type: [String],
       default: [],
     },
   },

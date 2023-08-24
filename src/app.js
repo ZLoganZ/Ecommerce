@@ -7,10 +7,11 @@ const compression = require("compression");
 const app = express();
 
 //init middleware
-app.use(express.json({ extended: false }));
+app.use(compression());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 app.use(helmet());
-app.use(compression());
 
 //init database
 require("./database/init.mongodb");
