@@ -58,12 +58,7 @@ class AccessService {
       });
 
       if (!keyStores) {
-        return {
-          code: 400,
-          metadata: {
-            message: "Create key token failed",
-          },
-        };
+        throw new BadRequestError("Error: Create key token failed");
       }
 
       // const publicKeyObject = crypto.createPublicKey(publicKeyString);
@@ -75,23 +70,15 @@ class AccessService {
       );
 
       return {
-        code: 201,
-        metadata: {
-          shop: getInfoData({
-            fields: ["_id", "name", "email"],
-            object: newShop,
-          }),
-          tokens,
-        },
+        shop: getInfoData({
+          fields: ["_id", "name", "email"],
+          object: newShop,
+        }),
+        tokens,
       };
     }
 
-    return {
-      code: 400,
-      metadata: {
-        message: "Create shop failed",
-      },
-    };
+    throw new BadRequestError("Error: Register failed");
     // } catch (error) {
     //   console.log(error);
     // }
