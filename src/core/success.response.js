@@ -1,7 +1,7 @@
 "use strict";
 
-const StatusCode = require("./statusCodes");
-const ReasonStatusCode = require("./reasonPhrases");
+const StatusCode = require("../utils/statusCodes");
+const ReasonStatusCode = require("../utils/reasonPhrases");
 
 class SuccessResponse {
   constructor({
