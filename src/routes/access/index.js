@@ -18,4 +18,10 @@ router.use(authentication);
 //sign out
 router.post("/shop/logout", asyncHandler(accessController.logout));
 
+//handle refresh token
+router.post(
+  "/shop/handle-refresh-token",
+  asyncHandler(accessController.handleRefreshToken)
+);
+
 module.exports = router;

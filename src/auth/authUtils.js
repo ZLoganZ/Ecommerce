@@ -40,7 +40,7 @@ const authentication = asyncHandler(async (req, res, next) => {
     throw new AuthFailureError("Error: Invalid request!");
   }
 
-  const keyStore = await keyTokenService.findKeyToken({ userId });
+  const keyStore = await keyTokenService.findByUserId({ userId });
   if (!keyStore) {
     throw new NotFoundError("Error: KeyToken not found!");
   }
@@ -62,7 +62,12 @@ const authentication = asyncHandler(async (req, res, next) => {
   }
 });
 
+const verifyJWT = async (token, keySecret) => {
+  return await jwt.verify(token, keySecret);
+};
+
 module.exports = {
   createTokenPair,
   authentication,
+  verifyJWT,
 };

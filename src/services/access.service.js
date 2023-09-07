@@ -4,9 +4,13 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 
 const keyTokenService = require("./keyToken.service");
-const { createTokenPair } = require("../auth/authUtils");
+const { createTokenPair, verifyJWT } = require("../auth/authUtils");
 const { getInfoData } = require("../utils");
-const { BadRequestError, AuthFailureError } = require("../core/error.response");
+const {
+  BadRequestError,
+  AuthFailureError,
+  ForbiddenError,
+} = require("../core/error.response");
 const shopService = require("./shop.service");
 
 const Roles = {
@@ -60,7 +64,7 @@ class AccessService {
   };
 
   static logout = async (keyStore) => {
-    return await keyTokenService.removeKeyToken({
+    return await keyTokenService.removeById({
       id: keyStore._id,
     });
   };
@@ -131,6 +135,65 @@ class AccessService {
     // } catch (error) {
     //   console.log(error);
     // }
+  };
+
+  static handleRefreshToken = async (refreshToken) => {
+    const foundKeyStore = await keyTokenService.findByRefreshTokenUsed({
+      refreshToken,
+    });
+    if (foundKeyStore) {
+      const { userId, email } = await verifyJWT(
+        refreshToken,
+        foundKeyStore.privateKey
+      );
+
+      console.log(`userId[1]:`, userId, email);
+
+      await keyTokenService.removeByUserId({ userId });
+
+      throw new ForbiddenError(
+        "Error: Something went wrong!! Please login again!"
+      );
+    }
+
+    const keyStore = await keyTokenService.findByRefreshToken({ refreshToken });
+    if (!keyStore) {
+      throw new AuthFailureError("Error: Authentication failed!");
+    }
+
+    const { userId, email } = await verifyJWT(
+      refreshToken,
+      keyStore.privateKey
+    );
+
+    console.log(`userId[2]:`, userId, email);
+
+    const foundShop = await shopService.findByEmail({ email });
+    if (!foundShop) {
+      throw new AuthFailureError("Error: Authentication failed!");
+    }
+
+    const tokens = await createTokenPair(
+      { userId, email },
+      keyStore.publicKey,
+      keyStore.privateKey
+    );
+
+    await keyStore.updateOne({
+      $set: {
+        refreshToken: tokens.refreshToken,
+      },
+      $addToSet: {
+        refreshTokenUsed: refreshToken,
+      },
+    });
+
+    return {
+      shop: getInfoData({
+        fields: ["_id", "name", "email"],
+        object: foundShop,
+      }),
+    };
   };
 }
 
