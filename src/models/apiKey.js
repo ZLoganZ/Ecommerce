@@ -1,7 +1,6 @@
 "use strict";
 
 const { model, Schema } = require("mongoose");
-const crypto = require("crypto");
 
 const DOCUMENT_NAME = "ApiKey";
 const COLLECTION_NAME = "ApiKeys";

@@ -137,36 +137,19 @@ class AccessService {
     // }
   };
 
-  static handleRefreshToken = async (refreshToken) => {
-    const foundKeyStore = await keyTokenService.findByRefreshTokenUsed({
-      refreshToken,
-    });
-    if (foundKeyStore) {
-      const { userId, email } = await verifyJWT(
-        refreshToken,
-        foundKeyStore.privateKey
-      );
+  static handleRefreshToken = async ({ refreshToken, keyStore, user }) => {
+    const { userId, email } = user;
 
-      console.log(`userId[1]:`, userId, email);
-
+    if (keyStore.refreshTokenUsed.includes(refreshToken)) {
       await keyTokenService.removeByUserId({ userId });
-
       throw new ForbiddenError(
         "Error: Something went wrong!! Please login again!"
       );
     }
 
-    const keyStore = await keyTokenService.findByRefreshToken({ refreshToken });
-    if (!keyStore) {
+    if (keyStore.refreshToken !== refreshToken) {
       throw new AuthFailureError("Error: Authentication failed!");
     }
-
-    const { userId, email } = await verifyJWT(
-      refreshToken,
-      keyStore.privateKey
-    );
-
-    console.log(`userId[2]:`, userId, email);
 
     const foundShop = await shopService.findByEmail({ email });
     if (!foundShop) {
@@ -189,11 +172,66 @@ class AccessService {
     });
 
     return {
-      shop: getInfoData({
-        fields: ["_id", "name", "email"],
-        object: foundShop,
-      }),
+      user,
+      tokens,
     };
+
+    // const foundKeyStore = await keyTokenService.findByRefreshTokenUsed({
+    //   refreshToken,
+    // });
+    // if (foundKeyStore) {
+    //   const { userId, email } = await verifyJWT(
+    //     refreshToken,
+    //     foundKeyStore.privateKey
+    //   );
+
+    //   console.log(`userId[1]:`, userId, email);
+
+    //   await keyTokenService.removeByUserId({ userId });
+
+    //   throw new ForbiddenError(
+    //     "Error: Something went wrong!! Please login again!"
+    //   );
+    // }
+
+    // const keyStore = await keyTokenService.findByRefreshToken({ refreshToken });
+    // if (!keyStore) {
+    //   throw new AuthFailureError("Error: Authentication failed!");
+    // }
+
+    // const { userId, email } = await verifyJWT(
+    //   refreshToken,
+    //   keyStore.privateKey
+    // );
+
+    // console.log(`userId[2]:`, userId, email);
+
+    // const foundShop = await shopService.findByEmail({ email });
+    // if (!foundShop) {
+    //   throw new AuthFailureError("Error: Authentication failed!");
+    // }
+
+    // const tokens = await createTokenPair(
+    //   { userId, email },
+    //   keyStore.publicKey,
+    //   keyStore.privateKey
+    // );
+
+    // await keyStore.updateOne({
+    //   $set: {
+    //     refreshToken: tokens.refreshToken,
+    //   },
+    //   $addToSet: {
+    //     refreshTokenUsed: refreshToken,
+    //   },
+    // });
+
+    // return {
+    //   shop: getInfoData({
+    //     fields: ["_id", "name", "email"],
+    //     object: foundShop,
+    //   }),
+    // };
   };
 }
 

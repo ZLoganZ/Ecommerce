@@ -1,6 +1,6 @@
 "use strict";
 
-const { authentication } = require("../../auth/authUtils");
+const { authenticationV2 } = require("../../auth/authUtils");
 const accessController = require("../../controllers/access.controller");
 const asyncHandler = require("../../helpers/asyncHandler");
 
@@ -13,7 +13,7 @@ router.post("/shop/register", asyncHandler(accessController.register));
 router.post("/shop/login", asyncHandler(accessController.login));
 
 //authentication
-router.use(authentication);
+router.use(authenticationV2);
 
 //sign out
 router.post("/shop/logout", asyncHandler(accessController.logout));
