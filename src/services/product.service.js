@@ -7,6 +7,7 @@ const {
   electronic,
   furniture,
 } = require("../models/product.model");
+const ProductRepository = require("../models/repositories/product.repo");
 
 // define the product factory
 class ProductFactory {
@@ -26,16 +27,50 @@ class ProductFactory {
       throw new BadRequestError(`Error: Invalid product type ${type}!`);
 
     return await new ProductClass(payload).createProduct();
-    // switch (type) {
-    //   case "Clothes":
-    //     return await new Clothe(payload).createProduct();
-    //   case "Electronics":
-    //     return await new Electronic(payload).createProduct();
-    //   case "Furniture":
-    //     return await new Furniture(payload).createProduct();
-    //   default:
-    //     throw new BadRequestError(`Error: Invalid product type ${type}!`);
-    // }
+  }
+
+  static async findAllDraftProductsForShop({
+    product_shop,
+    limit = 50,
+    skip = 0,
+  }) {
+    const query = { product_shop, isDraft: true };
+    return await ProductRepository.queryAllProductsForShop({
+      query,
+      limit,
+      skip,
+    });
+  }
+
+  static async findAllPublishedProductsForShop({
+    product_shop,
+    limit = 50,
+    skip = 0,
+  }) {
+    const query = { product_shop, isPublished: true };
+    return await ProductRepository.queryAllProductsForShop({
+      query,
+      limit,
+      skip,
+    });
+  }
+
+  static async publishProductByShop({ product_shop, product_id }) {
+    return await ProductRepository.publishProductByShop({
+      product_shop,
+      product_id,
+    });
+  }
+
+  static async unPublishProductByShop({ product_shop, product_id }) {
+    return await ProductRepository.unPublishProductByShop({
+      product_shop,
+      product_id,
+    });
+  }
+
+  static async searchProduct({ keySearch }) {
+    return await ProductRepository.searchProduct({ keySearch });
   }
 }
 
