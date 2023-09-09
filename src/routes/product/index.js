@@ -7,7 +7,13 @@ const asyncHandler = require("../../helpers/asyncHandler");
 const router = require("express").Router();
 
 // search products
-router.get("/product/search", asyncHandler(productController.searchProduct));
+router.get("/product/search", asyncHandler(productController.searchProducts));
+
+// get all products
+router.get("/product", asyncHandler(productController.findAllProducts));
+
+// get a product
+router.get("/product/:product_id", asyncHandler(productController.findProduct));
 
 // use authentication middleware
 router.use(authenticationV2);

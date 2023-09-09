@@ -52,11 +52,32 @@ class ProductController {
     }).send(res);
   };
 
-  static searchProduct = async (req, res, next) => {
+  static searchProducts = async (req, res, next) => {
+    new OK({
+      message: "All products searched successfully",
+      metadata: await ProductServices.searchProducts({
+        keySearch: req.query.keySearch,
+      }),
+    }).send(res);
+  };
+
+  static findAllProducts = async (req, res, next) => {
     new OK({
       message: "All products fetched successfully",
-      metadata: await ProductServices.searchProduct({
-        keySearch: req.query.keySearch,
+      metadata: await ProductServices.findAllProducts({
+        limit: req.query.limit,
+        sort: req.query.sort,
+        page: req.query.page,
+        filter: req.query.filter,
+      }),
+    }).send(res);
+  };
+
+  static findProduct = async (req, res, next) => {
+    new OK({
+      message: "Product fetched successfully",
+      metadata: await ProductServices.findProduct({
+        product_id: req.params.product_id,
       }),
     }).send(res);
   };

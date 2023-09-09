@@ -29,6 +29,8 @@ class ProductFactory {
     return await new ProductClass(payload).createProduct();
   }
 
+  static async updateProduct({ product_id, product_type, payload }) {}
+
   static async findAllDraftProductsForShop({
     product_shop,
     limit = 50,
@@ -69,8 +71,30 @@ class ProductFactory {
     });
   }
 
-  static async searchProduct({ keySearch }) {
-    return await ProductRepository.searchProduct({ keySearch });
+  static async searchProducts({ keySearch }) {
+    return await ProductRepository.searchProducts({ keySearch });
+  }
+
+  static async findAllProducts({
+    limit = 50,
+    sort = "ctime",
+    page = 1,
+    filter = { isPublished: true },
+  }) {
+    return await ProductRepository.findAllProducts({
+      limit,
+      sort,
+      page,
+      filter,
+      select: ["product_name", "product_thumb", "product_price"],
+    });
+  }
+
+  static async findProduct({ product_id }) {
+    return await ProductRepository.findProduct({
+      product_id,
+      unSelect: ["__v"],
+    });
   }
 }
 
