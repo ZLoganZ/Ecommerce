@@ -1,29 +1,29 @@
-"use strict";
+'use strict';
 
-const bcrypt = require("bcrypt");
-const crypto = require("crypto");
+const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 
-const keyTokenService = require("./keyToken.service");
-const { createTokenPair, verifyJWT } = require("../auth/authUtils");
-const { getInfoData } = require("../utils");
+const keyTokenService = require('./keyToken.service');
+const { createTokenPair, verifyJWT } = require('../auth/authUtils');
+const { getInfoData } = require('../utils');
 const {
   BadRequestError,
   AuthFailureError,
-  ForbiddenError,
-} = require("../core/error.response");
-const shopService = require("./shop.service");
+  ForbiddenError
+} = require('../core/error.response');
+const shopService = require('./shop.service');
 
 const Roles = {
-  ADMIN: "0",
-  SHOP: "1",
-  WRITER: "2",
-  EDITOR: "3",
+  ADMIN: '0',
+  SHOP: '1',
+  WRITER: '2',
+  EDITOR: '3'
 };
 
 const GenerateKeyPair = () => {
   return {
-    privateKey: crypto.randomBytes(64).toString("hex"),
-    publicKey: crypto.randomBytes(64).toString("hex"),
+    privateKey: crypto.randomBytes(64).toString('hex'),
+    publicKey: crypto.randomBytes(64).toString('hex')
   };
 };
 
@@ -31,11 +31,11 @@ class AccessService {
   static login = async ({ email, password, refreshToken = null }) => {
     const foundShop = await shopService.findByEmail({ email });
 
-    if (!foundShop) throw new BadRequestError("Error: Email is not found!");
+    if (!foundShop) throw new BadRequestError('Error: Email is not found!');
 
     const isMatch = await bcrypt.compare(password, foundShop.password);
 
-    if (!isMatch) throw new AuthFailureError("Error: Authentication failed!");
+    if (!isMatch) throw new AuthFailureError('Error: Authentication failed!');
 
     const { privateKey, publicKey } = GenerateKeyPair();
 
@@ -51,21 +51,18 @@ class AccessService {
       userId,
       publicKey,
       privateKey,
-      refreshToken: tokens.refreshToken,
+      refreshToken: tokens.refreshToken
     });
 
     return {
-      shop: getInfoData({
-        fields: ["_id", "name", "email"],
-        object: foundShop,
-      }),
-      tokens,
+      shop: getInfoData(['_id', 'name', 'email'], foundShop),
+      tokens
     };
   };
 
   static logout = async (keyStore) => {
     return await keyTokenService.removeById({
-      id: keyStore._id,
+      id: keyStore._id
     });
   };
 
@@ -74,7 +71,7 @@ class AccessService {
     const holderShop = await shopService.findByEmail({ email });
 
     if (holderShop) {
-      throw new BadRequestError("Error: Email is already in use!");
+      throw new BadRequestError('Error: Email is already in use!');
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -84,7 +81,7 @@ class AccessService {
       name,
       email,
       password: hashPassword,
-      roles: Roles.SHOP,
+      roles: Roles.SHOP
     });
 
     if (newShop) {
@@ -113,25 +110,22 @@ class AccessService {
         userId: newShop._id,
         publicKey,
         privateKey,
-        refreshToken: tokens.refreshToken,
+        refreshToken: tokens.refreshToken
       });
 
       if (!keyStores) {
-        throw new BadRequestError("Error: Create key token failed!");
+        throw new BadRequestError('Error: Create key token failed!');
       }
 
       // const publicKeyObject = crypto.createPublicKey(publicKeyString);
 
       return {
-        shop: getInfoData({
-          fields: ["_id", "name", "email"],
-          object: newShop,
-        }),
-        tokens,
+        shop: getInfoData(['_id', 'name', 'email'], newShop),
+        tokens
       };
     }
 
-    throw new BadRequestError("Error: Register failed!");
+    throw new BadRequestError('Error: Register failed!');
     // } catch (error) {
     //   console.log(error);
     // }
@@ -143,17 +137,17 @@ class AccessService {
     if (keyStore.refreshTokenUsed.includes(refreshToken)) {
       await keyTokenService.removeByUserId({ userId });
       throw new ForbiddenError(
-        "Error: Something went wrong!! Please login again!"
+        'Error: Something went wrong!! Please login again!'
       );
     }
 
     if (keyStore.refreshToken !== refreshToken) {
-      throw new AuthFailureError("Error: Authentication failed!");
+      throw new AuthFailureError('Error: Authentication failed!');
     }
 
     const foundShop = await shopService.findByEmail({ email });
     if (!foundShop) {
-      throw new AuthFailureError("Error: Authentication failed!");
+      throw new AuthFailureError('Error: Authentication failed!');
     }
 
     const tokens = await createTokenPair(
@@ -164,16 +158,16 @@ class AccessService {
 
     await keyStore.updateOne({
       $set: {
-        refreshToken: tokens.refreshToken,
+        refreshToken: tokens.refreshToken
       },
       $addToSet: {
-        refreshTokenUsed: refreshToken,
-      },
+        refreshTokenUsed: refreshToken
+      }
     });
 
     return {
       user,
-      tokens,
+      tokens
     };
 
     // const foundKeyStore = await keyTokenService.findByRefreshTokenUsed({

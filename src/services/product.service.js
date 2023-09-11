@@ -1,13 +1,14 @@
-"use strict";
+'use strict';
 
-const { BadRequestError } = require("../core/error.response");
+const { BadRequestError } = require('../core/error.response');
 const {
   product,
   clothe,
   electronic,
-  furniture,
-} = require("../models/product.model");
-const ProductRepository = require("../models/repositories/product.repo");
+  furniture
+} = require('../models/product.model');
+const ProductRepository = require('../models/repositories/product.repo');
+const { removeUndefined, updateNestedObject } = require('../utils');
 
 // define the product factory
 class ProductFactory {
@@ -29,45 +30,51 @@ class ProductFactory {
     return await new ProductClass(payload).createProduct();
   }
 
-  static async updateProduct({ product_id, product_type, payload }) {}
+  static async updateProduct(type, product_id, payload) {
+    const ProductClass = ProductFactory.productRegistry[type];
+    if (!ProductClass)
+      throw new BadRequestError(`Error: Invalid product type ${type}!`);
+
+    return await new ProductClass(payload).updateProduct({ product_id });
+  }
 
   static async findAllDraftProductsForShop({
     product_shop,
     limit = 50,
-    skip = 0,
+    skip = 0
   }) {
     const query = { product_shop, isDraft: true };
     return await ProductRepository.queryAllProductsForShop({
       query,
       limit,
-      skip,
+      skip
     });
   }
 
   static async findAllPublishedProductsForShop({
     product_shop,
     limit = 50,
-    skip = 0,
+    skip = 0
   }) {
     const query = { product_shop, isPublished: true };
     return await ProductRepository.queryAllProductsForShop({
       query,
       limit,
-      skip,
+      skip
     });
   }
 
   static async publishProductByShop({ product_shop, product_id }) {
     return await ProductRepository.publishProductByShop({
       product_shop,
-      product_id,
+      product_id
     });
   }
 
   static async unPublishProductByShop({ product_shop, product_id }) {
     return await ProductRepository.unPublishProductByShop({
       product_shop,
-      product_id,
+      product_id
     });
   }
 
@@ -77,23 +84,23 @@ class ProductFactory {
 
   static async findAllProducts({
     limit = 50,
-    sort = "ctime",
+    sort = 'ctime',
     page = 1,
-    filter = { isPublished: true },
+    filter = { isPublished: true }
   }) {
     return await ProductRepository.findAllProducts({
       limit,
       sort,
       page,
       filter,
-      select: ["product_name", "product_thumb", "product_price"],
+      select: ['product_name', 'product_thumb', 'product_price']
     });
   }
 
   static async findProduct({ product_id }) {
     return await ProductRepository.findProduct({
       product_id,
-      unSelect: ["__v"],
+      unSelect: ['__v']
     });
   }
 }
@@ -108,7 +115,7 @@ class Product {
     product_quantity,
     product_type,
     product_shop,
-    product_attributes,
+    product_attributes
   }) {
     this.product_name = product_name;
     this.product_thumb = product_thumb;
@@ -123,6 +130,14 @@ class Product {
   async createProduct(product_id) {
     return await product.create({ ...this, _id: product_id });
   }
+
+  async updateProduct(product_id, payload) {
+    return await ProductRepository.updateProduct({
+      product_id,
+      payload,
+      model: product
+    });
+  }
 }
 
 // define sub-class for clothes
@@ -130,14 +145,33 @@ class Clothe extends Product {
   async createProduct() {
     const newClothe = await clothe.create({
       ...this.product_attributes,
-      product_shop: this.product_shop,
+      product_shop: this.product_shop
     });
-    if (!newClothe) throw new BadRequestError("Error: Cannot create clothe!");
+    if (!newClothe) throw new BadRequestError('Error: Cannot create clothe!');
 
     const newProduct = await super.createProduct(newClothe._id);
-    if (!newProduct) throw new BadRequestError("Error: Cannot create product!");
+    if (!newProduct) throw new BadRequestError('Error: Cannot create product!');
 
     return newProduct;
+  }
+
+  async updateProduct({ product_id }) {
+    const objectParams = removeUndefined(this);
+
+    if (objectParams.product_attributes) {
+      await ProductRepository.updateProduct({
+        product_id,
+        payload: updateNestedObject(objectParams.product_attributes),
+        model: clothe
+      });
+    }
+
+    const updateProduct = await super.updateProduct(
+      product_id,
+      updateNestedObject(objectParams)
+    );
+
+    return updateProduct;
   }
 }
 
@@ -146,15 +180,34 @@ class Electronic extends Product {
   async createProduct() {
     const newElectronic = await electronic.create({
       ...this.product_attributes,
-      product_shop: this.product_shop,
+      product_shop: this.product_shop
     });
     if (!newElectronic)
-      throw new BadRequestError("Error: Cannot create electronic!");
+      throw new BadRequestError('Error: Cannot create electronic!');
 
     const newProduct = await super.createProduct(newElectronic._id);
-    if (!newProduct) throw new BadRequestError("Error: Cannot create product!");
+    if (!newProduct) throw new BadRequestError('Error: Cannot create product!');
 
     return newProduct;
+  }
+
+  async updateProduct({ product_id }) {
+    const objectParams = removeUndefined(this);
+
+    if (objectParams.product_attributes) {
+      await ProductRepository.updateProduct({
+        product_id,
+        payload: updateNestedObject(objectParams.product_attributes),
+        model: electronic
+      });
+    }
+
+    const updateProduct = await super.updateProduct(
+      product_id,
+      updateNestedObject(objectParams)
+    );
+
+    return updateProduct;
   }
 }
 
@@ -163,21 +216,40 @@ class Furniture extends Product {
   async createProduct() {
     const newFurniture = await furniture.create({
       ...this.product_attributes,
-      product_shop: this.product_shop,
+      product_shop: this.product_shop
     });
     if (!newFurniture)
-      throw new BadRequestError("Error: Cannot create furniture!");
+      throw new BadRequestError('Error: Cannot create furniture!');
 
     const newProduct = await super.createProduct(newFurniture._id);
-    if (!newProduct) throw new BadRequestError("Error: Cannot create product!");
+    if (!newProduct) throw new BadRequestError('Error: Cannot create product!');
 
     return newProduct;
+  }
+
+  async updateProduct({ product_id }) {
+    const objectParams = removeUndefined(this);
+
+    if (objectParams.product_attributes) {
+      await ProductRepository.updateProduct({
+        product_id,
+        payload: updateNestedObject(objectParams.product_attributes),
+        model: furniture
+      });
+    }
+
+    const updateProduct = await super.updateProduct(
+      product_id,
+      updateNestedObject(objectParams)
+    );
+
+    return updateProduct;
   }
 }
 
 // register the product class
-ProductFactory.registerProduct("Clothes", Clothe);
-ProductFactory.registerProduct("Electronics", Electronic);
-ProductFactory.registerProduct("Furnitures", Furniture);
+ProductFactory.registerProduct('Clothes', Clothe);
+ProductFactory.registerProduct('Electronics', Electronic);
+ProductFactory.registerProduct('Furnitures', Furniture);
 
 module.exports = ProductFactory;
