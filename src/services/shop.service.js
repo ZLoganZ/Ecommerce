@@ -1,6 +1,6 @@
 "use strict";
 
-const shopModel = require("../models/shop");
+const shopModel = require("../models/shop.model");
 
 class ShopService {
   static findByEmail = async ({

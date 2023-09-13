@@ -1,6 +1,6 @@
 "use strict";
 
-const keyTokenModel = require("../models/keyToken");
+const keyTokenModel = require("../models/keyToken.model");
 
 class KeyTokenService {
   static createKeyToken = async ({
